@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Linq;
 public class GameScript : MonoBehaviour
 {
-
     private float time;
     public TextMeshProUGUI textMeshProUGUI;
     private bool isStart;
@@ -14,9 +14,14 @@ public class GameScript : MonoBehaviour
     public GameObject resetbutton;
     public TextMeshProUGUI textMeshPro;
     public GameObject winner;
+    void Start()
+    {
+        networkManeger = GameObject.FindWithTag("NM").GetComponent<NetworkManeger>();
+}   
     public void Finish()
     {
         GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
+        networkManeger.isStart = true;
         foreach (GameObject obj in objs)
         {
             if (players.Contains(obj) == false)
@@ -30,7 +35,6 @@ public class GameScript : MonoBehaviour
     }
     public void Reset()
     {
-        players = null;
         winner.GetComponent<PlayerScript>().isStart = false;
         foreach (GameObject player in players)
         {
@@ -39,6 +43,8 @@ public class GameScript : MonoBehaviour
         }
         textMeshPro.text = "";
         resetbutton.SetActive(true);
+        players = null;
+        networkManeger.isStart = false;
     }
     public void FixedUpdate()
     {
@@ -67,9 +73,14 @@ public class GameScript : MonoBehaviour
             }
         }
     }
-
+    private NetworkManeger networkManeger;
     public void Gamestart()
     {
-        isStart = true;
+        GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
+        if (objs.Length >= 1)
+        {
+            networkManeger.isStart = false;
+            isStart = true;
+        }
     }
 }

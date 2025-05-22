@@ -8,6 +8,8 @@ TagManager:
   - wall
   - game
   - bullet
+  - Changecolor
+  - obs
   layers:
   - Default
   - TransparentFX

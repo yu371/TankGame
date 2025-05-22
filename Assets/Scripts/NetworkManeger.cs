@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Assertions.Must;
 using TMPro;
 using UnityEngine.UI;
+using Newtonsoft.Json.Linq;
 
 public class NetworkManeger : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class NetworkManeger : MonoBehaviour
     public PlayerData playerdate;
     private ClientWebSocket ws;
     public bool isOnce;
+    public bool isStart;
     // Start is called before the first frame update
     void Start()
     {
@@ -40,6 +42,7 @@ public class NetworkManeger : MonoBehaviour
             playerdate = new PlayerData();
             playerdate.ish = 1;
         }
+        // Invoke("SendStart",5f);
     }
     public void HostSend(string msg)
     {
@@ -73,91 +76,52 @@ public class NetworkManeger : MonoBehaviour
     //ws://192.168.11.6:8000
     StartWebSocket(url); // サーバーPCのIP
 #else
-        _ = ConnectFromEditor();
+
 #endif
-    }
-    private async Task ConnectFromEditor()
-    {
-        ws = new ClientWebSocket();
-        Debug.Log("🟡 Connecting from Editor...");
-
-        try
-        {
-
-            await ws.ConnectAsync(new Uri(url), CancellationToken.None);
-            Debug.Log("✅ Connected to WebSocket");
-            var buffer = new byte[1024];
-            while (ws.State == WebSocketState.Open)
-            {
-                if (isOnce == true)
-                {
-                    var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    string msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    ID data = JsonUtility.FromJson<ID>(msg);
-                    int playerId = int.Parse(data.id);
-                    Debug.Log(msg);
-                    if (idlist.Contains(playerId) == false)
-                    {
-                        idlist.Add(playerId);
-                        GameObject p = Instantiate(Player, Vector2.zero, Quaternion.identity);
-                        p.name = playerId.ToString();
-                        dic.Add(playerId.ToString(), new Vector2(0, 0));
-                        Attackdic.Add(playerId.ToString(), 0);
-                    }
-                    else
-                    {
-                        PlayerData playerData = JsonUtility.FromJson<PlayerData>(msg);
-                        dic[playerData.id.ToString()] = new Vector2(playerData.x, playerData.y);
-                        Attackdic[playerData.id.ToString()] = playerData.at;
-                    }
-                }
-                else
-                {
-
-
-                }
-            }
-
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("❌ Editor WebSocket error: " + ex.Message);
-        }
     }
     public TextMeshProUGUI textMeshProUGUI;
 
-    // public void OnMessageFromServer(string msg)
-    // {
-    //     if (isHost == false)
-    //     {
-    //         ID id = JsonUtility.FromJson<ID>(msg);
-    //         controllerScript.ChangeName(int.Parse(id.id));
-    //     }
-    //     else
-    //     {
-    //         ID data = JsonUtility.FromJson<ID>(msg);
-    //         int playerId = int.Parse(data.id);
-    //         if (idlist.Contains(playerId) == false)
-    //         {
-    //             idlist.Add(playerId);
-    //             GameObject p = Instantiate(Player, Vector2.zero, Quaternion.identity);
-    //             p.name = playerId.ToString();
-    //             dic.Add(playerId.ToString(), new Vector2(0, 0));
-    //             Attackdic.Add(playerId.ToString(), 0);
-    //         }
-    //         else
-    //         {
-    //             PlayerData playerData = JsonUtility.FromJson<PlayerData>(msg);
-    //             dic[playerData.id.ToString()] = new Vector2(playerData.x, playerData.y);
-    //             Attackdic[playerData.id.ToString()] = playerData.at;
-    //         }
-    //     }
-    // }
+    public void OnMessageFromServer(string msg)
+    {
+        if (isHost == false && isOnce == false)
+        {
+            isOnce = true;
+            ID id = JsonUtility.FromJson<ID>(msg);
+            controllerScript.ChangeName(int.Parse(id.id));
+        }
+        else
+        {
+            JObject obj = JObject.Parse(msg);
+            if (obj.ContainsKey("txt"))
+            {
+                Close close = JsonUtility.FromJson<Close>(msg);
+                Destroy(GameObject.Find(close.id.ToString()).gameObject);
+            }
+            else
+            {
+                ID data = JsonUtility.FromJson<ID>(msg);
+                int playerId = int.Parse(data.id);
+                if (idlist.Contains(playerId) == false && isStart == false)
+                {
+                    idlist.Add(playerId);
+                    GameObject p = Instantiate(Player, Vector2.zero, Quaternion.identity);
+                    p.name = playerId.ToString();
+                    dic.Add(playerId.ToString(), new Vector2(0, 0));
+                    Attackdic.Add(playerId.ToString(), 0);
+                }
+                else
+                {
+                    PlayerData playerData = JsonUtility.FromJson<PlayerData>(msg);
+                    dic[playerData.id.ToString()] = new Vector2(playerData.x, playerData.y);
+                    Attackdic[playerData.id.ToString()] = playerData.at;
+                }
+            }
+        }
+    }
 }
 public class ID
 {
     public string id;
-
 }
 public class Close
 {

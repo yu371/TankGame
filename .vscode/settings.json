@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "WebGL_3.sln"
+    "dotnet.defaultSolution": "TankGame.sln"
 }

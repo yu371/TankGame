@@ -12,6 +12,7 @@ public class PlayerScript : MonoBehaviour
     public float rpower = 1;
     private NetworkManeger networkManeger;
     public SpriteRenderer spriteRenderer;
+    public SpriteRenderer Changecolor;
     private int attack;
     public GameObject bullet;
     public float attackpower;
@@ -24,7 +25,9 @@ public class PlayerScript : MonoBehaviour
         rigidbody2D = gameObject.GetComponent<Rigidbody2D>();
         networkManeger = GameObject.FindWithTag("NM").GetComponent<NetworkManeger>();
         spriteRenderer.color = GetColorByPlayerId(int.Parse(gameObject.name));
-        GetComponent<SpriteRenderer>().color = GetColorByPlayerId(int.Parse(gameObject.name));
+        Changecolor.color = GetColorByPlayerId(int.Parse(gameObject.name));
+        // GetComponent<SpriteRenderer>().color = GetColorByPlayerId(int.Parse(gameObject.name));
+
     }
     public bool IsSpan = true;
     private float rotate;
